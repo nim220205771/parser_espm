@@ -1,0 +1,17 @@
+﻿{
+  "Debug":"0",
+  "color":"E8E8E8",
+  "colorText":"000000",
+  "filenameFormat":["no","sta","jalur","lajur","indikator"],
+  "font":"Segoe UI",
+  "fontSize":34,
+  "heightRectangle":100,
+  "maxDim":1280,
+  "paddingText":10,
+  "pathDownload":"img_download",
+  "pathExport":"img_export",
+  "pathMode":"LoadFilePath",
+  "sleep":200,
+  "transcolor":"FF",
+  "transcolorText":"FF"
+}

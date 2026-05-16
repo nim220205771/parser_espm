@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Self Assessment Image Processor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-5-theme/1.3.0/select2-bootstrap-5-theme.min.css"
+      integrity="sha512-z/90a5SWiu4MWVelb5+ny7sAayYUfMmdXKEAbpj27PfdkamNdyI3hcjxPxkOPbrXoKIm7r9V2mElt5f1OtVhqA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer" />
+    <link href="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.3.2/b-3.2.4/b-html5-3.2.4/fc-5.0.4/fh-4.0.3/r-3.0.5/sl-3.0.1/datatables.min.css" rel="stylesheet" integrity="sha384-hnEydSGHE7SnmbvZrcqK4f0myFAomTmGzIEGN6k5xi2VQxl8iuMLuCcoGtBLPu/j" crossorigin="anonymous" />
+
+    <link href="style.css" rel="stylesheet" />
+  </head>
+
+  <body class="p-3">
+    <!-- Modal Panduan -->
+    <div class="modal fade" id="howToModal" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Array Object</h5>
+          </div>
+          <div class="modal-body">
+            <pre id="output" style="background: #f4f4f4; padding: 1rem; border-radius: 6px; white-space: pre-wrap; word-break: break-word"></pre>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Mengerti</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="configEditorModal">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Configurations</h5>
+            <button class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <div id="configEditorContent"></div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-danger" onclick="resetConfig()">Reset Default</button>
+            <button class="btn btn-secondary" data-bs-dismiss="modal" data-bs-target="#configModal" data-bs-toggle="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Detail -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fa-solid fa-eye text-info"></i> Detail Data Temuan</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+          </div>
+          <div class="modal-body">
+            <!-- konten akan diisi dinamis -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Configurations -->
+    <div class="modal fade" id="configModal" tabindex="-1" aria-labelledby="configModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="configModalLabel"><i class="text-success fa-solid fa-gear"></i> Configurations</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="card mb-3">
+              <div class="card-body row">
+                <div class="card mb-3">
+                  <div class="card-body row">
+                    <div class="col-8">
+                      <p class="float-start">tekan tombol ini untuk menampilkan 4 langkah utama, 1️⃣2️⃣3️⃣4️⃣, langkah ditampilkan dalam badge merah.</p>
+                    </div>
+                    <div class="col-4">
+                      <button id="lihatBantuanBtn" class="btn btn-outline-danger float-end"> <i class="fa-solid fa-circle-question"></i> Lihat Bantuan </button>
+                    </div>
+                  </div>
+                </div>
+
+                <label for="pathMode" class="col-sm-4 col-form-label"> <i class="fa-solid fa-database"></i> Method Load Image Output </label>
+                <div class="col-sm-8">
+                  <select class="form-select" aria-label="Default select example" id="pathMode" onchange="config.pathMode = $(this).val()">
+                    <option value="SetWorkingDir">Same As Working Dir</option>
+                    <option value="LoadFilePath">Load File Real Path</option>
+                    <option value="BASE64">Base64 Blob (default)</option>
+                  </select>
+                </div>
+
+                <label for="Debug" class="col-sm-6 col-form-label"> <i class="fa-solid fa-database"></i> DevTools - Debug </label>
+                <div class="col-sm-6">
+                  <select class="form-select" aria-label="Default select example" id="Debug" onchange="config.Debug = $(this).val()">
+                    <option value="1">true</option>
+                    <option value="0">false</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="card mb-3">
+              <div class="card-body">
+                <label for="IndexDBManager" class="form-label"> <i class="fa-solid fa-database"></i> Stamp Manager </label>
+                <div class="row">
+                  <div class="col-6">
+                    <div class="form-floating">
+                      <select class="form-control" id="font" onchange="config[$(this).prop('id')] = $(this).val()">
+                        <option value="Arial">Arial</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Tahoma">Tahoma</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Lucida Console">Lucida Console</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Segoe UI">Segoe UI</option>
+                        <option value="Calibri">Calibri</option>
+                      </select>
+                      <label for="font">font</label>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="form-floating">
+                      <input type="number" inputmode="numeric" class="form-control" id="fontSize" placeholder="" onchange="config[$(this).prop('id')] = parseInt($(this).val())" />
+                      <label for="fontSize">fontSize</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="row mt-1">
+                  <div class="col-6">
+                    <div class="form-floating">
+                      <input type="number" inputmode="numeric" class="form-control" id="heightRectangle" onchange="config[$(this).prop('id')] = parseInt($(this).val())" />
+                      <label for="heightRectangle">heightRectangle</label>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="form-floating">
+                      <input type="number" inputmode="numeric" class="form-control" id="paddingText" placeholder="" onchange="config[$(this).prop('id')] = parseInt($(this).val())" />
+                      <label for="paddingText">paddingText</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="row mt-1">
+                  <div class="col-6">
+                    <div class="form-floating">
+                      <input type="number" inputmode="numeric" class="form-control" id="maxDim" onchange="config[$(this).prop('id')] = parseInt($(this).val())" />
+                      <label for="maxDim">maxDim</label>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="form-floating">
+                      <input type="number" inputmode="numeric" class="form-control" id="sleep" onchange="config[$(this).prop('id')] = parseInt($(this).val())" />
+                      <label for="sleep">sleep</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="row mt-1">
+                  <div class="col-6">
+                    <label for="warnaText" class="form-label">Warna Text</label>
+                    <div class="row" id="warnaText">
+                      <div class="col-3">
+                        <input type="color" class="form-control form-control-color" id="colorText" onchange="config[$(this).prop('id')] = $(this).val().replace('#', '').toUpperCase()" />
+                      </div>
+                      <div class="col-9 d-flex align-items-center">
+                        <input type="range" class="form-range" min="0" max="255" id="transcolorText" onchange="config[$(this).prop('id')] = parseInt($(this).val(), 10).toString(16).padStart(2, '0').toUpperCase()" />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <label for="warnaLatarText" class="form-label">Warna Latar Belakang</label>
+                    <div class="row" id="warnaLatarText">
+                      <div class="col-3">
+                        <input type="color" class="form-control form-control-color" id="color" onchange="config[$(this).prop('id')] = $(this).val().replace('#', '').toUpperCase()" />
+                      </div>
+                      <div class="col-9 d-flex align-items-center">
+                        <input type="range" class="form-range" min="0" max="255" id="transcolor" onchange="config[$(this).prop('id')] = parseInt($(this).val(), 10).toString(16).padStart(2, '0').toUpperCase()" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body">
+                <label for="IndexDBManager" class="form-label"> <i class="fa-solid fa-database"></i> IndexDB Manager </label>
+                <div class="row">
+                  <div class="col-6 d-flex justify-content-evenly">
+                    <button id="btnDeleteDB" class="btn btn-danger"><i class="fa fa-trash"></i> Hapus DB</button>
+                  </div>
+                  <div class="col-6 d-flex justify-content-evenly">
+                    <button id="btnBackupDB" class="btn btn-success"><i class="fa fa-download"></i> Backup DB</button>
+                  </div>
+                </div>
+                <div class="row mt-1">
+                  <div class="col-12 d-flex justify-content-evenly">
+                    <label class="btn btn-warning mb-0">
+                      <i class="fa fa-upload"></i> Restore DB
+                      <input type="file" id="fileRestoreDB" style="display: block" accept=".json" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card mt-1">
+              <div class="card-body row">
+                <div class="col-4">
+                  <button
+                    type="button"
+                    class="btn btn-outline-info"
+                    onclick="
+                      $('#configModal').modal('hide');
+                      $('#output').html(JSON.stringify(allData, null, 2));
+                      $('#howToModal').modal('show');
+                    ">
+                    <i class="fa-solid fa-file-code"></i>
+                    pdf Extractor JSON
+                  </button>
+                </div>
+                <div class="col-4">
+                  <button
+                    type="button"
+                    class="btn btn-outline-success"
+                    onclick="
+                      $('#configModal').modal('hide');
+                      $('#output').html(JSON.stringify(globalData, null, 2));
+                      $('#howToModal').modal('show');
+                    ">
+                    <i class="fa-solid fa-database"></i>
+                    IndexDB globalData
+                  </button>
+                </div>
+                <div class="col-4">
+                  <button
+                    type="button"
+                    class="btn btn-outline-warning"
+                    onclick="
+                      $('#configModal').modal('hide');
+                      $('#output').html(JSON.stringify(config, null, 2));
+                      $('#howToModal').modal('show');
+                    ">
+                    <i class="fa-solid fa-gears"></i>
+                    Configurations Object
+                  </button>
+                </div>
+
+                <button
+                  class="btn btn-secondary mt-1"
+                  data-bs-target="#configEditorModal"
+                  data-bs-toggle="modal"
+                  onclick="
+                    $('#configEditorModal').modal('show');
+                    renderConfigEditor();
+                  ">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                  Edit Configurations
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Close</button>
+            <button type="button" class="btn btn-primary" onclick="saveConfig()">💾 Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex">
+      <h3><i class="fas fa-file-code"></i> Parser ESPM HTML</h3>
+      <i class="fs-3 text-success fa-solid fa-gear ms-auto me-0 mt-auto mb-auto" onclick="$('#configModal').modal('show')"></i>
+    </div>
+
+    <ul class="nav nav-tabs mt-3" id="mainTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="parser-tab" data-bs-toggle="tab" data-bs-target="#parserTabContent" type="button" role="tab" aria-controls="parserTabContent" aria-selected="true"> <i class="fa-solid fa-1"></i> Database Images </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="table-tab" data-bs-toggle="tab" data-bs-target="#tableTabContent" type="button" role="tab" aria-controls="tableTabContent" aria-selected="true"> <i class="fa-solid fa-2"></i> PDF Extract Data </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="image-tab" data-bs-toggle="tab" data-bs-target="#imageTabContent" type="button" role="tab" aria-controls="imageTabContent" aria-selected="true"> <i class="fa-solid fa-3"></i> Process Gambar </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="howto-tab" data-bs-toggle="tab" data-bs-target="#howtoTabContent" type="button" role="tab" aria-controls="howtoTabContent" aria-selected="true"> ❓ How To </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="about-tab" data-bs-toggle="tab" data-bs-target="#aboutTabContent" type="button" role="tab" aria-controls="aboutTabContent" aria-selected="true"> <i class="fa-solid fa-circle-info"></i> Tentang Aplikasi </button>
+      </li>
+    </ul>
+
+    <div class="tab-content mt-3" id="mainTabContent">
+      <div class="tab-pane fade show active" id="parserTabContent" role="tabpanel" aria-labelledby="parser-tab">
+        <span class="float-end">IndexDB : <code id="infoDatabase"></code></span>
+
+        <div class="accordion accordion-flush" id="accordionFlushExample">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne"> 1️⃣ Parse view-source eSPM </button>
+            </h2>
+            <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+              <div class="accordion-body">
+                <div class="row placeholder-glow">
+                  <div class="col-4">
+                    <div class="text-center">
+                      <img id="dropZone" src="https://url.espm.go.id/themes/espm/assets/images/logo_pu_50x50.png" style="width: 100px !important; height: 100px !important" class="rounded" width="100" height="100" alt="open espm bpjt pu" />
+                      <br />
+                      <strong>🌐 Web Scraping </strong> url.espm.go.id laporan tindak lanjut selft assesment
+                    </div>
+                  </div>
+
+                  <div class="col-8 position-relative">
+                    <textarea id="sourceInput" class="form-control mb-3" placeholder="📋 Paste view-source copy element HTML di sini..."></textarea>
+                    <span class="bantuan-label hide position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">1️⃣</span>
+                  </div>
+                </div>
+                <hr />
+                <div class="row">
+                  <div class="col-12">
+                    <button id="processBtn" class="btn btn-primary float-end mb-3 position-relative">
+                      <i class="fas fa-code"></i>
+                      Proses Source <span class="bantuan-label hide position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">2️⃣</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo"> 2️⃣ Database Image </button>
+            </h2>
+            <div id="flush-collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+              <div class="accordion-body">
+                <div class="row mb-2">
+                  <div class="col-md-2">
+                    <select id="filterYear" class="form-select">
+                      <option value="">Tahun</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
+                    <select id="filterMonth" class="form-select" style="display: none">
+                      <option value="">Bulan</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2 ms-auto me-0">
+                    <button class="btn btn-success text-nowrap" onclick="exportIndexedDBToExcel()"><i class="fa-solid fa-file-excel"></i> Export To Excel</button>
+                  </div>
+                </div>
+                <div class="table-responsive">
+                  <table id="resultTable" class="table table-sm table-bordered table-striped table-hover w-100">
+                    <thead class="table-dark">
+                      <tr class="align-middle">
+                        <th></th>
+                        <th>ID</th>
+                        <th>Timestamp</th>
+                        <th>Des</th>
+                        <th>Desper</th>
+                        <th>Indikator</th>
+                        <th>Jalur</th>
+                        <th>Lajur</th>
+                        <th>Geolocations</th>
+                        <th>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseThree" aria-expanded="false" aria-controls="flush-collapseThree">📊 Tabel Summary </button>
+            </h2>
+            <div id="flush-collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+              <div class="accordion-body">
+                <div class="card mt-1">
+                  <div class="card-body">
+                    <h5 class="card-title">📊 Tabel Summary</h5>
+                    <div id="dbSummary" class="mb-3"></div>
+                    <button class="btn btn-success mb-2" onclick="exportGlobalDataToCSV(globalData)"> <i class="fas fa-file-csv"></i> Export CSV </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm mt-2">
+          <div class="card-body">
+            <!-- ===== TITLE ===== -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+              <div>
+                <h5 class="card-title mb-1 fw-bold">
+                  <i class="fas fa-chart-line text-primary me-2"></i>
+                  EVALUASI SELF ASSESSMENT BUJT
+                </h5>
+
+                <div class="text-muted small"> Aplikasi E-SPM – Ruas Tol Kertosono–Mojokerto </div>
+              </div>
+
+              <!-- ===== EXPORT BUTTON ===== -->
+              <div class="mt-2 mt-md-0">
+                <button class="btn btn-primary btn-sm" onclick="copyTableToClipboard('hasilTable')"> <i class="fas fa-copy me-1"></i> Copy ke Excel </button>
+                <button class="btn btn-secondary btn-sm ms-2" onclick="copyTableHTML('hasilTable')"> <i class="fas fa-table me-1"></i> Copy Format </button>
+              </div>
+            </div>
+
+            <!-- ===== PERIODE ===== -->
+            <div class="row g-2 mb-3">
+              <div class="col-auto">
+                <span class="fw-semibold me-2"> <i class="fas fa-calendar-alt text-secondary me-1"></i> Periode : </span>
+              </div>
+
+              <div class="col-auto">
+                <input type="date" id="startDate" class="form-control form-control-sm" />
+              </div>
+              <div class="col-auto">
+                <input type="date" id="endDate" class="form-control form-control-sm" />
+              </div>
+              <div class="col-auto ms-auto me-0">
+                <button class="btn btn-primary btn-sm" onclick="tampilkanTabel()"> <i class="fas fa-search me-1"></i> Tampilkan </button>
+              </div>
+            </div>
+
+            <!-- ===== HASIL ===== -->
+            <div id="hasil" class="table-responsive"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tableTabContent" role="tabpanel" aria-labelledby="table-tab">
+        <div class="card">
+          <div class="card-body">
+            <div class="mb-2 mt-0 row">
+              <label for="pdfInput" class="col-sm-3 col-form-label"> <i class="fa-solid fa-file-pdf"></i> laporan-pemenuhan-sa </label>
+              <div class="col-sm-9 position-relative">
+                <input type="file" class="form-control" id="pdfInput" accept="application/pdf" />
+                <span class="bantuan-label hide position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">3️⃣</span>
+              </div>
+              <div class="form-text text-md-end" id="pdfInputaddon">
+                ℹ️ file pdf hasil download pada menu eSPM
+                <code><i class="fa-solid fa-print"></i>Laporan Tindak Lanjut SA Rutin</code>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table id="pdfTable" class="table table-sm table-bordered table-striped display dt-responsive w-100"> </table>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div class="card">
+            <div class="card-body">
+              <div class="mb-2 row">
+                <label for="pathDownload" class="col-sm-3 col-form-label"> <i class="fa-solid fa-cloud-arrow-down"></i> Download Img Path </label>
+                <div class="col-sm-9">
+                  <input type="text" class="form-control" id="pathDownload" onchange="config.pathDownload = $(this).val()" />
+                </div>
+                <div class="form-text text-md-end" id="pathDownloadaddon"> ℹ️ Folder tempat img asli disimpan sebelum diterapkan timestamp </div>
+              </div>
+              <div class="mb-2 row">
+                <label for="pathExport" class="col-sm-3 col-form-label"> <i class="fa-solid fa-file-export"></i> Extract Img Path </label>
+                <div class="col-sm-9">
+                  <input type="text" class="form-control" id="pathExport" onchange="config.pathExport = $(this).val()" />
+                </div>
+                <div class="form-text text-md-end" id="pathExportaddon"> ℹ️ Folder tempat img hasil penerapan timestamp disimpan </div>
+              </div>
+              <div class="mb-2 row">
+                <label for="filenameFormat" class="col-sm-3 col-form-label"> <i class="fa-solid fa-file-image"></i> Susunan Nama File </label>
+                <div class="col-sm-9">
+                  <select type="text" class="form-control" id="filenameFormat" multiple="multiple" onchange="config.filenameFormat = $(this).val()"></select>
+                </div>
+                <div class="form-text text-md-end">ℹ️ Gunakan kombinasi field untuk menyusun nama file (misal: <code>[id] [timestamp] [lokasi]</code>) </div>
+              </div>
+
+              <hr />
+              <button id="downloadAllBtn" class="btn btn-primary float-end position-relative"> <i class="fa fa-download"></i> Download & Proses <span class="bantuan-label hide position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">4️⃣</span> </button>
+            </div>
+          </div>
+        </div>
+        <!-- Container untuk overlay data pada gambar -->
+        <div style="position: absolute; left: -9999px; top: -9999px">
+          <table id="tabletagging" class="table table-bordered table-sm" style="font-size: 12px; background-color: white">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="imageTabContent" role="tabpanel" aria-labelledby="image-tab">
+        <div class="card">
+          <div class="card-body">
+            <div id="progressInfo" class="mb-2 text-muted" style="font-size: 0.9rem"> Tidak ada data </div>
+
+            <div class="progress mb-2" id="progressBarTotal" role="progressbar" aria-label="Example with label" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%">0%</div>
+            </div>
+
+            <hr />
+            <div class="row placeholder-glow" id="resultImages"> </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="howtoTabContent" role="tabpanel" aria-labelledby="howto-tab">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title"><i class="fa-solid fa-1"></i> Database Images</h5>
+            <hr />
+            <div class="card">
+              <div class="card-body">
+                <p>Bagian ini menggunakan metode <span class="fst-italic">scraping</span> untuk mengambil seluruh informasi Self Assessment dari halaman eSPM — mulai dari <span class="fw-bold">ID, indikator, deskripsi, lokasi, hingga URL gambar</span>.</p>
+                <p>Data yang berhasil diproses akan disimpan secara lokal ke dalam <span class="fw-bolder">IndexedDB</span>, sehingga dapat digunakan kembali tanpa perlu mengambil data ulang dari situs.</p>
+                <p>Anda juga bisa melihat pada <span class="fw-bolder">Tabel Summary</span> jumlah data per <span class="fw-bold">Range Tanggal, Jumlah Hari, Jumlah Data, dan juga Status</span> mencukupi atau tidak.</p>
+                <p>Tombol <span class="fw-bolder">Export CSV</span> berfungsi untuk mendownload <span class="fw-bolder">IndexedDB</span> ke dalam bentuk file Comma-Separated Values untuk keperluan di luar aplikasi ini</p>
+              </div>
+            </div>
+            <hr />
+            <h6>1️⃣ Parse view-source eSPM</h6>
+            <div class="card">
+              <div class="card-body bg-secondary-subtle">
+                <span class="card-title"><kbd>1</kbd> 🌐 Web Scraping</span>
+                <ol class="card-text">
+                  <li>Pilih <strong>SPM → Self Assessment BUJT</strong></li>
+                  <li>✅ centang Tanggal dan pilih range terlebih dahulu dan <kbd>Cari</kbd></li>
+                  <li>Pilih <kdb>🧠 Web Scraping</kdb> yang ada di pojok kanan atas GUI</li>
+                  <li
+                    >Sistem akan melakukan <strong>💉 InjectJS</strong> untuk membuat halaman auto-scrolling sampai semua data dimuat, program akan menutup GUI ini dan kembali ke GUI Utama untuk melakukan parsing dan update <code>IndexedDB</code
+                    ><small>
+                      <em>Catatan: proses loading data ditandai dengan tulisan <strong>"Memuat Data..."</strong> di akhir halaman.</em></small
+                    ></li
+                  >
+                </ol>
+                <span class="card-title"><kbd>2</kbd> 📋 Paste view-source copy element HTML</span>
+                <ol class="card-text">
+                  <li>Buka URL <code>url.espm.go.id</code></li>
+                  <li>
+                    Pilih
+                    <img src="https://url.espm.go.id/themes/espm/assets/icon/icon%20-%20spm.png" height="15px" alt="SPM Icon" />
+                    <strong>SPM → Self Assessment BUJT</strong>
+                  </li>
+                  <li>
+                    Scroll sampai semua tanggal yang diinginkan muncul.
+                    <br />
+                    <small
+                      ><em>Catatan: proses loading data ditandai dengan tulisan <strong>"Memuat Data..."</strong> di akhir halaman.</em></small
+                    >
+                  </li>
+                  <li>
+                    Lakukan pengambilan source code:
+                    <ul>
+                      <li>Klik kanan → <strong>Inspect</strong> (atau tekan <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd>) </li>
+                      <li>Pilih tab <kbd>Elements</kbd></li>
+                      <li>Klik kanan pada baris <code>&lt;html lang="en" data-theme="dark"&gt;</code> → Copy → Copy element</li>
+                    </ul>
+                  </li>
+                  <li> Buka tab <strong>1. Database Images → 1. Parse view-source eSPM</strong> </li>
+                  <li>Klik kanan pada area <code>📋 Paste view-source copy element HTML di sini...</code> → <strong>Paste as plain text</strong></li>
+                  <li>Klik tombol <strong>Proses Source</strong>, lalu tunggu hingga proses selesai.</li>
+                  <li> Setelah proses selesai, kamu bisa melakukan <strong>refresh</strong> (<kbd>Ctrl</kbd>+<kbd>F5</kbd>) atau <strong>keluar & buka kembali</strong> aplikasi. </li>
+                </ol>
+              </div>
+            </div>
+
+            <h6 class="mt-1">2️⃣ Database Image</h6>
+            <div class="card">
+              <div class="card-body bg-secondary-subtle">
+                <ol class="card-text">
+                  <li> Bagian menampilkan data hasil scraping dari eSPM yang telah disimpan ke dalam <code>IndexedDB</code>. </li>
+                  <li>
+                    Data yang tampil meliputi:
+                    <ul>
+                      <li><code>id</code>: Nomor unik identitas data</li>
+                      <li><code>tanggal</code>: Waktu temuan</li>
+                      <li><code>indikator</code>, <code>deskripsi</code>, <code>STA</code>, <code>jalur/lajur</code>, <code>url</code> gambar </li>
+                    </ul>
+                  </li>
+                  <li>
+                    Fitur yang tersedia:
+                    <ul>
+                      <li><strong>✏️ Edit</strong>: Mengubah informasi data langsung dari tabel</li>
+                      <li><strong>🗑️ Delete</strong>: Menghapus data dari <code>IndexedDB</code></li>
+                      <li><strong>🔍 View</strong>: Melihat gambar hasil scraping</li>
+                    </ul>
+                  </li>
+                  <li> Semua data dapat difilter dan dicari melalui kolom pencarian di atas tabel. </li>
+                  <li>
+                    Data di bagian ini bersumber dari bagian sebelumnya:
+                    <strong>1️⃣ Parse view-source eSPM</strong> dan akan digunakan pada proses berikutnya.
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-3">
+          <div class="card-body">
+            <h5 class="card-title"><i class="fa-solid fa-2"></i> PDF Extract Data</h5>
+            <hr />
+
+            <div class="card mb-3">
+              <div class="card-body">
+                <p>Tab ini berfungsi untuk <strong>mengekstrak data temuan dari file PDF</strong> hasil Self Assessment BUJT, lalu mengolahnya menjadi daftar gambar temuan yang siap diproses.</p>
+                <p>Proses ekstraksi akan mengambil informasi penting dari file PDF seperti <code>tanggal</code>, <code>STA</code>, <code>indikator</code>, <code>jalur/lajur</code>, hingga <code>URL gambar</code> yang ditemukan di dalam dokumen. </p>
+              </div>
+            </div>
+
+            <h6>📝 Komponen Utama</h6>
+            <div class="card bg-secondary-subtle mb-3">
+              <div class="card-body">
+                <ul class="mb-0">
+                  <li><i class="fa-solid fa-file-pdf"></i> laporan-pemenuhan-sa <code>#pdfInput</code>: Input file untuk memilih file PDF Self Assessment (*.pdf).</li>
+                  <li>Table Data View <code>#pdfTable</code>: Tabel hasil ekstraksi dari file PDF yang telah dipilih. Berisi daftar data yang siap diproses.</li>
+                  <li><i class="fa-solid fa-cloud-arrow-down"></i> Download Img Path <code>#pathDownload</code>: Folder tujuan tempat menyimpan gambar asli yang diambil dari eSPM.</li>
+                  <li><i class="fa-solid fa-file-export"></i> Extract Img Path <code>#pathExport</code>: Folder tujuan untuk menyimpan gambar hasil overlay + kompresi.</li>
+                  <li><i class="fa-solid fa-file-image"></i> Susunan Nama File <code>#filenameFormat</code>: Format penamaan file gambar yang dihasilkan, dapat disesuaikan dengan kombinasi field seperti <code>id</code>, <code>lokasi</code>, dsb.</li>
+                </ul>
+              </div>
+            </div>
+
+            <h6>🔘 Tombol <i class="fa fa-download"></i> Download & Proses</h6>
+            <div class="card bg-secondary-subtle mb-3">
+              <div class="card-body">
+                <p>Saat tombol ini ditekan, maka aplikasi akan melakukan proses sebagai berikut:</p>
+                <ol class="mb-0">
+                  <li>Membaca seluruh baris data dari <code>#pdfTable</code>.</li>
+                  <li>Memfilter baris yang memiliki URL gambar yang valid.</li>
+                  <li>Mengunduh gambar berdasarkan URL dari situs <code>url.espm.go.id</code>.</li>
+                  <li>Melakukan kompresi dan menambahkan overlay teks (tanggal, lokasi, STA, jalur).</li>
+                  <li
+                    >Menyimpan gambar hasil akhir ke tab <b><i class="fa-solid fa-3"></i> Process Gambar</b> <code>#pathExport</code> <span class="text-decoration-line-through">dengan format sesuai <code>#filenameFormat</code></span
+                    >.
+                  </li>
+                  <li>Memperbarui tampilan UI dan menampilkan progress per gambar di WebView.</li>
+                </ol>
+                <p class="mt-2"
+                  ><small><strong>Catatan:</strong> Proses ini hanya dapat berjalan jika aplikasi dijalankan dalam mode desktop (menggunakan EXE).</small></p
+                >
+              </div>
+            </div>
+
+            <h6>💡 Tips</h6>
+            <ul>
+              <li>Gunakan file PDF yang telah diunduh dari sistem eSPM dengan struktur yang valid.</li>
+              <li>Jika ada baris kosong atau tidak memiliki URL, data tersebut akan dilewati.</li>
+              <li>Pastikan koneksi internet aktif untuk mengunduh gambar dari eSPM.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card mt-3">
+          <div class="card-body">
+            <h5 class="card-title"><i class="fa-solid fa-3"></i> Process Gambar</h5>
+            <hr />
+
+            <div class="card mb-3">
+              <div class="card-body">
+                <p>Tab ini bertanggung jawab untuk menampilkan <strong>proses visualisasi gambar secara real-time</strong> yang sedang diproses oleh sistem.</p>
+                <p>Setiap gambar yang berhasil diolah (kompresi + overlay) akan ditampilkan dalam bentuk <strong>kartu gambar</strong>, sedangkan yang masih dalam proses akan ditampilkan sebagai <strong>placeholder loading</strong>.</p>
+              </div>
+            </div>
+
+            <h6>🔧 Komponen Utama</h6>
+            <div class="card bg-secondary-subtle mb-3">
+              <div class="card-body">
+                <ul class="mb-0">
+                  <li><code>#progressInfo</code>: Label teks yang menunjukkan status progres proses (misalnya: <code>Proses 5 dari 20</code>). </li>
+                  <li><code>#progressBarTotal</code>: Progress bar keseluruhan yang menunjukkan persentase proses secara total.</li>
+                  <li><code>#resultImages</code>: Container yang menampilkan seluruh <code>card</code> gambar, baik dalam bentuk loading maupun hasil akhir.</li>
+                </ul>
+              </div>
+            </div>
+
+            <h6>🖼️ Tampilan Kartu</h6>
+            <div class="card bg-light mb-3">
+              <div class="card-body">
+                <p><strong>Placeholder Card</strong> (saat gambar masih diproses):</p>
+                <div class="card" style="width: 10rem">
+                  <div class="card-body placeholder-glow">
+                    <div class="placeholder col-12 mb-2" style="height: 100px"></div>
+                    <p class="card-text placeholder-glow">
+                      <span class="placeholder col-6"></span>
+                      <span class="placeholder col-4"></span>
+                    </p>
+                  </div>
+                </div>
+
+                <hr />
+
+                <p><strong>Hasil Card</strong> (setelah proses selesai):</p>
+                <div class="card" style="width: 10rem">
+                  <img src="sample.jpg" class="card-img-top" alt="Gambar Hasil" />
+                  <div class="card-body">
+                    <p class="card-text">
+                      <code>ID 01</code><br />
+                      <small class="text-muted">685+000 | A | Non Lajur</small>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h6>🔁 Proses yang Terjadi</h6>
+            <ol>
+              <li
+                >Tab ini akan aktif setelah tombol <strong><i class="fa fa-download"></i> Download & Proses</strong> pada tab sebelumnya ditekan.</li
+              >
+              <li>Untuk setiap data yang valid, sistem akan menampilkan <em>placeholder card</em> sementara.</li>
+              <li>Setelah proses gambar selesai, placeholder akan digantikan dengan gambar hasil kompresi + overlay.</li>
+              <li>Status progres ditampilkan di <code>#progressInfo</code> dan progress bar.</li>
+              <li>Jika terjadi kegagalan (gagal download, file rusak, dll), kartu akan menampilkan status <code>failed</code>. </li>
+            </ol>
+
+            <h6>💡 Tips</h6>
+            <ul>
+              <li>Pastikan folder output sudah ditentukan dengan benar di tab sebelumnya.</li>
+              <li>Jika menggunakan mode <code>BASE64</code>, pastikan WebView2 dapat memuat data image dari string base64. </li>
+              <li>Gunakan filter dan pencarian jika jumlah gambar sangat banyak.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card mt-3">
+          <div class="card-body">
+            <h5 class="card-title"><i class="fa-solid fa-gear text-success"></i> Configurations</h5>
+            <hr />
+
+            <div class="card mb-3">
+              <div class="card-body">
+                <p>Bagian ini memungkinkan kamu untuk <strong>menyesuaikan pengaturan sistem</strong> sebelum memproses gambar, mengatur tampilan teks overlay, serta mengelola database lokal (<code>IndexedDB</code>).</p>
+                <p>Setiap perubahan konfigurasi akan diterapkan secara langsung ke dalam objek <code>config</code>, dan dapat disimpan permanen dengan tombol <strong>💾 Save changes</strong>.</p>
+              </div>
+            </div>
+
+            <h6><i class="fa-solid fa-database"></i> Method Load Image Output</h6>
+            <div class="card bg-secondary-subtle mb-3">
+              <div class="card-body">
+                <p>Opsi <code>pathMode</code> menentukan cara pemuatan gambar yang akan ditampilkan ke WebView.</p>
+                <ul>
+                  <li><code>SetWorkingDir</code>: Memuat gambar dari folder relatif tempat aplikasi dijalankan.</li>
+                  <li><code>LoadFilePath</code>: Memuat gambar dari path lengkap dengan prefix <code>file:///</code>.</li>
+                  <li><code>BASE64</code>: Mengonversi gambar ke format base64 dan ditampilkan langsung di HTML.</li>
+                </ul>
+              </div>
+            </div>
+
+            <h6><i class="fa-solid fa-database"></i> Stamp Manager</h6>
+            <div class="card bg-secondary-subtle mb-3">
+              <div class="card-body">
+                <p>Pengaturan ini memengaruhi tampilan stempel (teks overlay) pada gambar hasil proses.</p>
+                <div class="row">
+                  <div class="col">
+                    <ul>
+                      <li><code>font</code>: Pilih jenis font yang digunakan untuk teks.</li>
+                      <li><code>fontSize</code>: Ukuran font teks dalam pixel.</li>
+                      <li><code>heightRectangle</code>: Tinggi kotak latar teks.</li>
+                      <li><code>paddingText</code>: Jarak antara teks dan tepi kotak.</li>
+                      <li><code>maxDim</code>: Ukuran maksimal sisi terpanjang gambar setelah kompresi.</li>
+                      <li><code>sleep</code>: Waktu jeda antara proses gambar (ms), untuk stabilitas sistem.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h6><i class="fa-solid fa-database"></i> IndexDB Manager</h6>
+            <div class="card bg-secondary-subtle mb-3">
+              <div class="card-body">
+                <ul>
+                  <li><strong>🗑️ Hapus DB</strong>: Menghapus seluruh isi database lokal (<code>IndexedDB</code>).</li>
+                  <li><strong>📥 Backup DB</strong>: Menyimpan seluruh isi database ke file <code>.json</code>.</li>
+                  <li><strong>📤 Restore DB</strong>: Memuat ulang database dari file <code>.json</code> hasil backup. </li>
+                </ul>
+              </div>
+            </div>
+
+            <h6><i class="fa-solid fa-table"></i> Preview Object</h6>
+            <div class="card bg-light mb-3">
+              <div class="card-body row">
+                <div class="col-md-4">
+                  <button
+                    type="button"
+                    class="btn btn-outline-info w-100"
+                    onclick="
+                      $('#configModal').modal('hide');
+                      $('#output').html(JSON.stringify(allData, null, 2));
+                      $('#howToModal').modal('show');
+                    ">
+                    <i class="fa-solid fa-table"></i> pdf Extractor JSON
+                  </button>
+                </div>
+                <div class="col-md-4">
+                  <button
+                    type="button"
+                    class="btn btn-outline-success w-100"
+                    onclick="
+                      $('#configModal').modal('hide');
+                      $('#output').html(JSON.stringify(globalData, null, 2));
+                      $('#howToModal').modal('show');
+                    ">
+                    <i class="fa-solid fa-table"></i> IndexDB globalData
+                  </button>
+                </div>
+                <div class="col-md-4">
+                  <button
+                    type="button"
+                    class="btn btn-outline-warning w-100"
+                    onclick="
+                      $('#configModal').modal('hide');
+                      $('#output').html(JSON.stringify(config, null, 2));
+                      $('#howToModal').modal('show');
+                    ">
+                    <i class="fa-solid fa-table"></i> Configurations Object
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-body">
+            <h6 class="card-title"><i class="fa-solid fa-keyboard"></i> Shortcut Keyboard</h6>
+            <ul class="list-unstyled mb-0">
+              <li><kbd>F5</kbd> — Reload konten halaman</li>
+              <li><kbd>F9</kbd> — Membuka Developer Tools (Inspect)</li>
+              <li><kbd>Ctrl</kbd> + <kbd>Esc</kbd> — Keluar dari aplikasi</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="aboutTabContent" role="tabpanel" aria-labelledby="about-tab">
+        <div class="card mt-4">
+          <div class="card-body">
+            <h4 class="card-title"><i class="fa-solid fa-file-lines"></i> Tentang Aplikasi (About)</h4>
+            <hr />
+
+            <h5 class="fw-bold">📌 Nama Aplikasi</h5>
+            <p
+              ><strong>Self Assessment Image Processor</strong><br />
+              Aplikasi berbasis desktop dengan antarmuka web, digunakan untuk mengambil, memproses, dan mengelola data visual hasil inspeksi Self Assessment dari situs <a href="https://url.espm.go.id" target="_blank">eSPM BPJT</a>.
+            </p>
+
+            <h5 class="fw-bold">⏱️ Durasi Pengerjaan</h5>
+            <p class="mb-0">Proses pembuatan aplikasi ini memakan waktu <strong>± 4 hari kerja</strong>, mencakup:</p>
+            <ul>
+              <li>Perancangan antarmuka & struktur tab.</li>
+              <li>Pengembangan logika parsing HTML & PDF.</li>
+              <li>Pengelolaan IndexedDB dan komunikasi WebView ↔ AHK.</li>
+              <li>Penambahan fitur download, overlay, dan ekspor gambar.</li>
+            </ul>
+
+            <h5 class="fw-bold">🎯 Tujuan Aplikasi</h5>
+            <p class="mb-0"
+              >Aplikasi ini dibuat untuk memudahkan pengambilan data temuan lapangan berbasis gambar dari sistem eSPM (<a href="https://url.espm.go.id" target="_blank">https://url.espm.go.id</a>) melakukan overlay informasi penting di atas gambar, dan mengorganisasi data dalam bentuk siap
+              ekspor.</p
+            >
+            <p class="mb-0">Aplikasi ini dibuat untuk memudahkan proses:</p>
+            <ul>
+              <li>Pengumpulan data gambar dari sistem eSPM.</li>
+              <li>Penyamaan data gambar dengan laporan PDF.</li>
+              <li>Penambahan informasi visual (overlay) pada gambar hasil inspeksi.</li>
+            </ul>
+
+            <h5 class="fw-bold">⚠️ Tantangan Teknis</h5>
+            <p class="mb-0"
+              >Salah satu tantangan terbesar dalam pengembangan ini adalah:<br />
+              <strong class="mb-0">🧩 Menyamakan urutan gambar dengan entri PDF</strong></p
+            >
+            <ul>
+              <li>PDF Resmi tidak menyertakan ID unik dan urutan entri tidak berdasarkan waktu (datetime), melainkan tersusun manual.</li>
+              <li>Sedangkan data gambar dari eSPM memiliki ID dan timestamp.</li>
+              <li><strong>Solusi yang ditawarkan:</strong> mencocokkan data berdasarkan nomor dan isi deskripsi secara manual/semi-otomatis.</li>
+            </ul>
+
+            <h5 class="fw-bold">🔎 Fitur Utama</h5>
+            <ul>
+              <li><strong>Scraping HTML Source eSPM:</strong> Mengambil seluruh data Self Assessment (indikator, deskripsi, lokasi, gambar) langsung dari halaman HTML.</li>
+              <li><strong>Manajemen Database Gambar (IndexedDB):</strong> Menyimpan hasil parsing lokal ke IndexedDB agar bisa digunakan ulang tanpa scraping ulang.</li>
+              <li><strong>Ekstrak Data dari PDF:</strong> Parsing laporan PDF dan mencocokkannya dengan gambar.</li>
+              <li><strong>Download & Overlay Otomatis:</strong> Tambahkan teks overlay seperti tanggal, STA, lokasi.</li>
+              <li><strong>Ekspor Gambar Siap Pakai:</strong> Nama file bisa dikustomisasi, tersimpan di folder output. </li>
+            </ul>
+
+            <h5 class="fw-bold">⚙️ Teknologi yang Digunakan</h5>
+            <ul>
+              <li><strong>Frontend:</strong> HTML, Bootstrap 5, jQuery, SweetAlert2, FontAwesome, DataTables.</li>
+              <li><strong>Backend:</strong> AutoHotkey v2 + WebView2 (integrasi HTML ↔ AHK).</li>
+              <li><strong>PDF Parsing:</strong> Menggunakan PDF.js.</li>
+              <li><strong>Penyimpanan Lokal:</strong> IndexedDB.</li>
+              <li
+                ><strong>Komunikasi:</strong> <code>window.chrome.webview.postMessage()</code> ↔
+                <code>MyWindow.ExecuteScriptAsync()</code>
+              </li>
+            </ul>
+
+            <h5 class="fw-bold">🗂️ Struktur Tab Menu</h5>
+            <ul>
+              <li><strong>1️⃣ Database Images:</strong> Mengambil data dari HTML eSPM dan menyimpan ke IndexedDB.</li>
+              <li><strong>2️⃣ PDF Extract Data:</strong> Mengekstrak informasi dari PDF untuk dicocokkan.</li>
+              <li><strong>3️⃣ Process Gambar:</strong> Mengunduh gambar, menambahkan overlay teks, dan menyimpan hasil akhir.</li>
+              <li><strong>ℹ️ How To & About:</strong> Informasi Dokumentasi User dan Teknis</li>
+            </ul>
+
+            <h5 class="fw-bold">📂 Struktur File Aplikasi</h5>
+            <ul>
+              <li><code>index.html</code>: Antarmuka utama</li>
+              <li><code>config.json</code>: Konfigurasi pengguna</li>
+              <li><code>img_download/</code>: Folder gambar asli dari eSPM</li>
+              <li><code>img_export/</code>: Folder gambar hasil overlay</li>
+              <li><code>parser_espm.ahk</code>: Skrip utama backend</li>
+            </ul>
+
+            <h5 class="fw-bold">🔐 Privasi & Keamanan</h5>
+            <ul>
+              <li>✅ Semua proses berjalan lokal — tidak ada data keluar dari perangkat.</li>
+              <li>✅ Tidak mengambil data secara otomatis tanpa izin.</li>
+              <li>✅ Parsing HTML & PDF dilakukan langsung di komputer pengguna.</li>
+              <li>✅ Tidak ada data pribadi yang disimpan atau dikirim.</li>
+            </ul>
+
+            <h5 class="fw-bold">👤 Pengembang</h5>
+            <ul>
+              <li><strong>Nama:</strong> Aris Nur Mahendra</li>
+              <li><strong>Instansi:</strong> Tenaga Inspeksi, Departemen Layanan Pemeliharaan</li>
+              <li><strong>Email:</strong> <a href="mailto:arisnurmahendra@yahoo.com">arisnurmahendra@yahoo.com</a></li>
+              <li><strong>Lisensi:</strong> Bebas digunakan untuk keperluan internal dan non-komersial.</li>
+            </ul>
+
+            <h5 class="fw-bold">📌 Catatan Tambahan</h5>
+            <ul>
+              <li>Aplikasi ini tidak bersifat resmi dari BPJT. Ditujukan hanya untuk mendukung proses internal tim lapangan atau verifikasi data.</li>
+              <li>Pastikan selalu memverifikasi hasil parsing dan data PDF secara manual sebelum digunakan lebih lanjut. </li>
+            </ul>
+            <div class="text-muted text-end small"> Dibuat dengan ❤️ oleh Aris • 2025 </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js" integrity="sha384-VFQrHzqBh5qiJIU0uGU5CIW3+OWpdGGJM9LBnGbuIH2mkICcFZ7lPd/AAtI7SNf7" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js" integrity="sha384-/RlQG9uf0M2vcTw3CX7fbqgbj/h8wKxw7C3zu9/GxcBPRKOEcESxaxufwRXqzq6n" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.3.2/b-3.2.4/b-html5-3.2.4/fc-5.0.4/fh-4.0.3/r-3.0.5/sl-3.0.1/datatables.min.js" integrity="sha384-WLXgq6O0IWJD1KlNAOSoGp2ICVwGIDiSQz23Lre+D8xjvit2MF0/djhksne2u6d6" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+    <script src="index.js"></script>
+  </body>
+</html>
